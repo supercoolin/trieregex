@@ -95,9 +95,9 @@ class TrieRegEx:
         return sorted(result)
 
     @Memoizer
-    def regex(self, trie={}, reset=True):
-        # type: (Dict[str, Any], bool) -> str
-        """Returns a boundary-less escaped regex string based on the trie"""
+    def regex(self, trie={}, reset=True, escape=True):
+        # type: (Dict[str, Any], bool, bool) -> str
+        """Returns a boundary-less escaped or not regex string based on the trie"""
         if reset:
             trie = self._trie
 
@@ -108,13 +108,21 @@ class TrieRegEx:
             key = list(trie.keys())[0]
             if key == '**':
                 return ''
-            return f'{escape(key)}{self.regex(trie[key], False)}'
+            if escape:
+                return f'{escape(key)}{self.regex(trie[key], False)}'
+            else:
+                return f'{key}{self.regex(trie[key], False)}'
 
         else:
-            sequences = [f'{escape(key)}{self.regex(trie[key], False)}'
-                         for key in trie if key != '**']
-            sequences.sort(key=lambda x: (-len(x), x))
-
+            if escape:
+                sequences = [f'{escape(key)}{self.regex(trie[key], False)}'
+                            for key in trie if key != '**']
+                sequences.sort(key=lambda x: (-len(x), x))
+            else:
+                sequences = [f'{key}{self.regex(trie[key], False)}'
+                            for key in trie if key != '**']
+                sequences.sort(key=lambda x: (-len(x), x))
+                
             if len(sequences) == 1:
                 result = sequences[0]
                 if len(sequences[0]) > 1:
